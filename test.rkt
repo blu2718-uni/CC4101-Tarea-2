@@ -20,4 +20,13 @@ Ejercicio 1
 (test (parse-prop '(or false true true)) (p-or (list (ff) (tt) (tt))))
 (test (parse-prop '(with x false (and true x))) (p-with 'x (ff) (p-and (list (tt) (p-id 'x)))))
 
+;; c)
+
+(test (p-subst (p-id 'x) 'x (tt)) (tt))
+(test (p-subst (p-id 'x) 'y (tt)) (p-id 'x))
+(test (p-subst (p-with 'x (ff) (p-and (list (tt) (p-id 'x)))) 'x (tt)) 
+      (p-with 'x (ff) (p-and (list (tt) (p'id 'x)))))
+(test (p-subst (p-with 'y (ff) (p-and (list (tt) (p-id 'x)))) 'x (tt)) 
+      (p-with 'y (ff) (p-and (list (tt) (tt)))))
+
 (require "T2.rkt")
