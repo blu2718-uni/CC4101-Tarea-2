@@ -26,11 +26,11 @@ En caso afirmativo, ¿con quién?: _
 (deftype Prop
   (tt)
   (ff)
-  (p-id x)
+  (p-id id)
   (p-not p)
   (p-and p-mult)
   (p-or p-mult)
-  (p-with x val p))
+  (p-with id val p))
 
 #| Parte B |#
 
@@ -65,8 +65,21 @@ En caso afirmativo, ¿con quién?: _
 #| Parte C |#
 
 ;; p-subst :: Prop Symbol Prop -> Prop
-(define (p-subst expr x val) '???)
-
+;; Sustituye un identificador dentro de una expresión.
+(define (p-subst expr x val) 
+  (match expr
+    [(tt) (tt)]
+    [(ff) (ff)]
+    [(p-id id) (if (eq? x id)
+		   val
+		   (p-id id))]
+    [(p-not p) (p-not (p-subst p x val))]
+    [(p-and p-mult) (p-and (map (lambda (p) (p-subst p x val)) p-mult))]
+    [(p-or p-mult) (p-or (map (lambda (p) (p-subst p x val)) p-mult))]
+    [(p-with id w-val p) (if (eq? x id)
+			   (p-with id w-val p)
+			   (p-with id w-val (p-subst p x val)))]
+   ))
 
 #| Parte D |#
 
