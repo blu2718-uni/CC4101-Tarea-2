@@ -25,7 +25,7 @@ Ejercicio 1
 (test (p-subst (p-id 'x) 'x (tt)) (tt))
 (test (p-subst (p-id 'x) 'y (tt)) (p-id 'x))
 (test (p-subst (p-with 'x (ff) (p-and (list (tt) (p-id 'x)))) 'x (tt)) 
-      (p-with 'x (ff) (p-and (list (tt) (p'id 'x)))))
+      (p-with 'x (ff) (p-and (list (tt) (p-id 'x)))))
 (test (p-subst (p-with 'y (ff) (p-and (list (tt) (p-id 'x)))) 'x (tt)) 
       (p-with 'y (ff) (p-and (list (tt) (tt)))))
 
@@ -44,6 +44,8 @@ Ejercicio 1
 (test (p-eval (p-subst (p-or (list (ff) 'x)) 'x (tt))) #t)
 (test (p-eval (p-or (list (tt) 'x))) #t)
 
-
+#|
+Ejercicio 2
+|#
 
 (require "T2.rkt")
