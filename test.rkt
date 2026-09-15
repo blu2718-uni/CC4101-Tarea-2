@@ -34,7 +34,7 @@ Ejercicio 1
 (test (p-eval (tt)) #t)
 (test (p-eval (ff)) #f)
 (test/exn (p-eval (p-id 'x)) "p-eval: Free variable.")
-(test/exn (p-eval (p-with 'x (ff) (p-and (list 'y 'x)))) "p-eval: Free variable.")
+(test/exn (p-eval (p-with 'x (ff) (p-and (list (p-id 'y) (p-id 'x))))) "p-eval: Free variable.")
 (test/exn (p-eval (p-subst (p-or (list (ff) 'y)) 'x (tt))) "p-eval: Free variable.")
 (test (p-eval (p-and (list (tt) (ff)))) #f)
 (test (p-eval (p-or (list (tt) (ff)))) #t)
