@@ -29,4 +29,21 @@ Ejercicio 1
 (test (p-subst (p-with 'y (ff) (p-and (list (tt) (p-id 'x)))) 'x (tt)) 
       (p-with 'y (ff) (p-and (list (tt) (tt)))))
 
+;; d)
+
+(test (p-eval (tt)) #t)
+(test (p-eval (ff)) #f)
+(test/exn (p-eval (p-id 'x)) "p-eval: Free variable.")
+(test/exn (p-eval (p-with 'x (ff) (p-and (list 'y 'x)))) "p-eval: Free variable.")
+(test/exn (p-eval (p-subst (p-or (list (ff) 'y)) 'x (tt))) "p-eval: Free variable.")
+(test (p-eval (p-and (tt) (ff))) #f)
+(test (p-eval (p-or (tt) (ff))) #t)
+(test (p-eval (p-not (ff))) #t)
+(test (p-eval (p-with 'x (tt) (p-and (tt) 'x))) #t)
+(test (p-eval (p-with 'x (ff) (p-and (list (tt) 'x)))) #f)
+(test (p-eval (p-subst (p-or (list (ff) 'x)) 'x (tt))) #t)
+(test (p-eval (p-or (list (tt) 'x))) #t)
+
+
+
 (require "T2.rkt")
