@@ -84,7 +84,22 @@ En caso afirmativo, ¿con quién?: _
 #| Parte D |#
 
 ;; p-eval :: Prop -> Boolean
-(define (p-eval p) '???)
+(define (p-eval p)
+  (match p
+    [(tt) #t]
+    [(ff) #f]
+    [(p-id id) (error "p-eval: Free variable.")]
+    [(p-not p) (not (p-eval p))]
+    [(p-and p-mult) (cond
+		      [(= (length p-mult) 0) #t]
+		      [(not (p-eval (first p-mult))) #f]
+		      [(p-eval (first p-mult)) (p-eval (p-and (rest p-mult)))])]
+    [(p-or p-mult) (cond
+		     [(= (length p-mult) 0) #f]
+		     [(p-eval (first p-mult)) #t]
+		     [(not (p-eval (first p-mult))) (p-eval (p-and (rest p-mult)))])]
+    [(p-with id val p) (p-eval (p-subst p id val))]
+    ))
 
 
 
