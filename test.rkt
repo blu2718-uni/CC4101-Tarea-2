@@ -50,4 +50,13 @@ Ejercicio 1
 Ejercicio 2
 |#
 
+;; a)
+
+(test (parser '(fun (x y) (+ x y))) (fun '(x y) (add (id 'x) (id 'y))))
+(test (parser '((fun (x y) (+ x y)) (2 3))) 
+      (app (fun '(x y) (add (id 'x) (id 'y))) (list (num 2) (num 3))))
+(test/exn (parser '(fun () 10)) "parser: Function expects at least one argument")
+
+;; b)
+
 (require "T2.rkt")
