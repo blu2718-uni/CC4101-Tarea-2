@@ -116,7 +116,8 @@ En caso afirmativo, ¿con quién?: _
          | (mul <expr> <expr>)
          | (if0 <expr> <expr> <expr>)
          | (with <id> <expr> <expr>)
-         ...
+	 | (fun <id>+ <expr>)
+	 | (app <expr> <expr>+)
 |#
 
 (deftype Expr
@@ -126,8 +127,9 @@ En caso afirmativo, ¿con quién?: _
   (mul l r)
   (if0 c t f)
   (with x v exp)
-  ;...
-  )
+  (fun a exp)
+  (app f a)
+)
 
 #|
 <s-expr> ::= <number>
@@ -148,7 +150,10 @@ En caso afirmativo, ¿con quién?: _
     [(list '* a b) (mul (parser a) (parser b))]
     [(list 'if0 c t f) (if0 (parser c) (parser t) (parser f))]
     [(list 'with x v exp) (with x (parser v) (parser exp))]
-    ; ...
+    [(list 'fun a exp) (if (>= (length a) 1) 
+			   (fun a (parser exp))
+			   (error "parser: Function expects at least one argument"))]
+    [(list f v) (app (parser f) (map (lambda (e) (parser e)) v))]
     ))
 
 #| Parte B y C|#
