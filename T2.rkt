@@ -134,11 +134,12 @@ En caso afirmativo, ¿con quién?: _
 #|
 <s-expr> ::= <number>
            | <symbol>
-           | (list + <s-expr> <s-expr>)
-           | (list * <s-expr> <s-expr>)
-           | (list if0 <s-expr> <s-expr> <s-expr>)
-           | (list with <symbol> <s-expr> <s-expr>)
-           ...
+           | (list '+ <s-expr> <s-expr>)
+           | (list '* <s-expr> <s-expr>)
+           | (list 'if0 <s-expr> <s-expr> <s-expr>)
+           | (list 'with <symbol> <s-expr> <s-expr>)
+           | (list 'fun <symbol>+ <s-expr>)
+	   | (list (list 'fun <symbol>+ <s-expr>) <number>+)
 |#
 
 ;; parser :: <s-expr> -> Expr
@@ -158,9 +159,14 @@ En caso afirmativo, ¿con quién?: _
 
 #| Parte B y C|#
 
+#|
+<EValue> ::= (numV <number>)
+	   | (closureV List(<id>) <expr> <env>)
+|#
+
 (deftype EValue
   (numV n)
-  ;...
+  (closureV args body env)
   )
 
 ;; numV+ :: EValue EValue -> EValue
@@ -180,6 +186,11 @@ En caso afirmativo, ¿con quién?: _
   (match x
     [(numV n) (zero? n)]
     [_ (error 'is-zero-numV? "Wrong operand")]))
+
+#|
+<Env> ::= (mtEnv)
+	| (xtEnv <id> <EValue> <Env>)
+|#
 
 (deftype Env
   (mtEnv)
