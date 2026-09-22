@@ -72,8 +72,10 @@ Ejercicio 2
 (test (interp (fun '(x) (id 'x)) (mtEnv))
       (closureV '(x) (id 'x) (mtEnv)))
 
-(test (interp (with 'x (num 3) (fun '(y) (id 'y))) (mtEnv)) ???)
-(test (interp (with 'x (num 3) (add (id 'x) (num 1))) (mtEnv)) ???)
+(test (interp (with 'x (num 3) (fun '(y) (id 'y))) (mtEnv)) 
+      (closureV '(y) (id 'y) (xtEnv 'x (numV 3) (mtEnv))))
+(test (interp (with 'x (num 3) (add (id 'x) (num 1))) (mtEnv)) 
+      (numV 4))
 
 (test (interp (app (fun '(x y) (add (id 'x) (id 'y)))
 		   (list (num 1) (num2))) (mtEnv))
@@ -82,5 +84,25 @@ Ejercicio 2
 (test/exn (interp (app (fun '(x y) (add (id 'x) (id 'y)))
 		   (list (num 1))) (mtEnv))
       "interp: Arity mismatch")
+
+;; c)
+
+(test (interp (curry* 
+		(fun '(x y z) (add (id 'x) (add (id 'y) (id 'z))))) (mtEnv)) 
+      (closureV '(x) (fun '(y) (fun '(z) (add (id 'x) (id 'z)))) (mtEnv)))
+
+(test (interp (uncurry* 
+		(fun '(x) (fun '(y) (fun '(z) (add (id 'x) (add (id 'y) (id 'z)))))) (mtEnv)))
+      (closureV '(x y z) (add (id 'x) (add (id 'y) (id 'z))) (mtEnv)))
+
+(test (interp (swap* (fun '(x y) (add (id 'x) (id 'y)))) (mtEnv))
+      (closureV '(y x) (add (id 'x) (id 'y)) (mtEnv)))
+
+;; d)
+
+(test (run '((fun (x y) (+ x y))) (4 6)) (numV 10))
+(test (run '((fun (x y) (* x y)) (2 3))) (numV 6)) 
+(test (run '(if0 ((fun (x y) (- x y)) (5 5)) (6) (1))) (numV 6))
+(test (run '(with x (+ 3 1) (- 4 x))) (numV 0))
 
 (require "T2.rkt")
