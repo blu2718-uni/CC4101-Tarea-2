@@ -59,4 +59,28 @@ Ejercicio 2
 
 ;; b)
 
+(test (interp (num10) (mtEnv)) (numV 10))
+(test (interp (add (num 2) (num 3)) (mtEnv)) (numV 5))
+
+(test (interp (mult (num 2) (num 3)) (mtEnv)) (numV 6))
+(test (interp (if0 (num 0) (num 1) (num 2)) (mtEnv)) (numV 1))
+(test (interp (if0 (num 1) (num 1) (num 2)) (mtEnv)) (numV 2))
+
+(test (interp (id 'x) (extend 'x (numV) (mtEnv))) (numV 3))
+(test/exn (interp (id 'x) (mtEnv)) "lookup: Variable not found.")
+
+(test (interp (fun '(x) (id 'x)) (mtEnv))
+      (closureV '(x) (id 'x) (mtEnv)))
+
+(test (interp (with 'x (num 3) (fun '(y) (id 'y))) (mtEnv)) ???)
+(test (interp (with 'x (num 3) (add (id 'x) (num 1))) (mtEnv)) ???)
+
+(test (interp (app (fun '(x y) (add (id 'x) (id 'y)))
+		   (list (num 1) (num2))) (mtEnv))
+      (numV 3))
+
+(test/exn (interp (app (fun '(x y) (add (id 'x) (id 'y)))
+		   (list (num 1))) (mtEnv))
+      "interp: Arity mismatch")
+
 (require "T2.rkt")
