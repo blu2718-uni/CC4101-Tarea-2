@@ -55,11 +55,11 @@ Ejercicio 2
 (test (parser '(fun (x y) (+ x y))) (fun '(x y) (add (id 'x) (id 'y))))
 (test (parser '((fun (x y) (+ x y)) (2 3))) 
       (app (fun '(x y) (add (id 'x) (id 'y))) (list (num 2) (num 3))))
-(test/exn (parser '(fun () 10)) "parser: Function expects at least one argument")
+(test/exn (parser '(fun () 10)) "parser: Function expects at least one argument.")
 
 ;; b)
 
-(test (interp (numV 10) (mtEnv)) (numV 10))
+(test (interp (num 10) (mtEnv)) (numV 10))
 (test (interp (add (num 2) (num 3)) (mtEnv)) (numV 5))
 
 (test (interp (mul (num 2) (num 3)) (mtEnv)) (numV 6))
