@@ -116,8 +116,8 @@ En caso afirmativo, ¿con quién?: _
          | (mul <expr> <expr>)
          | (if0 <expr> <expr> <expr>)
          | (with <id> <expr> <expr>)
-	 | (fun <id>+ <expr>)
-	 | (app <expr> <expr>+)
+	 | (fun (list <id>) <expr>)
+	 | (app <expr> (list <expr>))
 |#
 
 (deftype Expr
@@ -138,8 +138,8 @@ En caso afirmativo, ¿con quién?: _
            | (list '* <s-expr> <s-expr>)
            | (list 'if0 <s-expr> <s-expr> <s-expr>)
            | (list 'with <symbol> <s-expr> <s-expr>)
-           | (list 'fun <symbol>+ <s-expr>)
-	   | (list (list 'fun <symbol>+ <s-expr>) <number>+)
+           | (list 'fun (list <symbol>+) <s-expr>)
+	   | (list <s-expr> (list <s-expr>+))
 |#
 
 ;; parser :: <s-expr> -> Expr
@@ -153,15 +153,15 @@ En caso afirmativo, ¿con quién?: _
     [(list 'with x v exp) (with x (parser v) (parser exp))]
     [(list 'fun a exp) (if (>= (length a) 1) 
 			   (fun a (parser exp))
-			   (error "parser: Function expects at least one argument"))]
-    [(list f v) (app (parser f) (map (lambda (e) (parser e)) v))]
+			   (error "parser: Function expects at least one argument."))]
+    [(list f v) #:when (list? v) (app (parser f) (map (lambda (e) (parser e)) v))]
     ))
 
 #| Parte B y C|#
 
 #|
 <EValue> ::= (numV <number>)
-	   | (closureV List(<id>) <expr> <env>)
+	   | (closureV (list <id>) <expr> <env>)
 |#
 
 (deftype EValue
@@ -208,18 +208,48 @@ En caso afirmativo, ¿con quién?: _
                           v
                           (lookup x prev))]))
 
+;; apply-closure :: EValue (list EValue) -> EValue
+;; Actualiza una clausura tomando en cuenta una lista de valores
+(define (apply-closure closure values)
+  (match closure
+    [(closureV params body fenv)
+     (cond
+       [(= (length params) (length values)) (closureV params body fenv)]
+       [(< (length values) (length params)) (closure)]
+       [else])]))
+
 ;; interp :: Expr Env -> EValue
-(define (interp expr env) '???)
+;; Reduce una expresión a su valor.
+(define (interp expr env)
+  (match expr
+    [(num n) (numV n)]
+    [(id x) (lookup x env)]
+    [(add l r) (numV+ (interp l env) (interp r env))]
+    [(mul l r) (numV* (interp l env) (interp r env))]
+    [(if0 c t f) (if (is-zero-numV? (interp c env))
+		   (interp t env)
+		   (interp f env))]
+    [(with x v exp) #:when (symbol? x) (interp exp (extend x v env))]
+    [(fun a exp) (closureV a exp env)]
+    [(app f a) (def (closureV params body fenv) (interp f env)
+	       (def values ((map (lambda (e) (interp e env)) a)))
+	       (app-clousure (clousureV params body fenv) values)]
 
 
 #| Parte C |#
 
-;; currying :: EValue -> EValue
+;; curry* :: EValue -> EValue
+;; Individualiza los argumentos de una función
+(define (curry* val) '???)
 
-;; uncurrying :: EValue -> EValue
+;; uncurry* :: EValue -> EValue
+;; Toma una función que toma varios argumentos individuales 
+;; y retorna una función que recibe una única lista de varios argumentos
+(define (uncurry* val) '???)
 
 ;; swapping :: EValue -> EValue
-
+;; Invierte el orden de los argumentos de una función
+(define (swap* val) '???)
 
 #| Parte D |#
 
