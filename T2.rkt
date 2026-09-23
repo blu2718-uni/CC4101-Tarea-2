@@ -129,6 +129,9 @@ En caso afirmativo, ¿con quién?: _
   (with x v exp)
   (fun a exp)
   (app f a)
+  (curry* e)
+  (uncurry* e)
+  (swap* e)
 )
 
 #|
@@ -155,6 +158,9 @@ En caso afirmativo, ¿con quién?: _
 			   (fun a (parser exp))
 			   (error "parser: Function expects at least one argument."))]
     [(list f v) #:when (list? v) (app (parser f) (map (lambda (e) (parser e)) v))]
+    [(list 'curry* e) (curry* (parser e))]
+    [(list 'uncurry* e) (uncurry* (parser e))]
+    [(list 'swap* e) (swap* (parser e))]
     ))
 
 #| Parte B y C|#
@@ -208,22 +214,40 @@ En caso afirmativo, ¿con quién?: _
                           v
                           (lookup x prev))]))
 
-;; apply-closure :: EValue (list EValue) -> EValue
-;; Actualiza una clausura tomando en cuenta una lista de valores
-(define (apply-closure closure values)
+;; bind-args :: (listof Symbol) (listof EValue) Env -> (cons (listof Symbol) Env)
+;; Asocia cada valor con su parámetro (de izquierda a derecha) en el
+;; ambiente, y retorna los parámetros que quedaron sin usar junto al
+;; nuevo ambiente.
+(define (bind-args params vals env)
+  (if (null? vals)
+      (cons params env)
+      (bind-args (rest params) (rest vals)
+                 (extend (first params) (first vals) env))))
+
+
+;; apply-closure :: EValue (listof EValue) -> EValue
+;; Aplica una clausura a sus argumentos. Si sobran parámetros se
+;; retorna una nueva clausura (aplicación parcial); si faltan
+;; parámetros se lanza el error de aridad.
+(define (apply-closure closure values*)
   (match closure
     [(closureV params body fenv)
      (cond
-       [(= (length params) (length values)) (closureV params body fenv)]
-       [(< (length values) (length params)) (closure)]
-       [else])]))
+       [(> (length values) (length params))
+        (error 'interp "Arity mismatch")]
+       [else
+        (def (cons rparams renv) (bind-args params values* fenv))
+        (if (null? rparams)
+            (interp body renv)                       ; aplicación total
+            (closureV rparams body renv))])]))       ; aplicación parcial
+
 
 ;; interp :: Expr Env -> EValue
 ;; Reduce una expresión a su valor.
 (define (interp expr env)
   (match expr
     [(num n) (numV n)]
-    [(id x) (lookup x env)]
+    [(id x) (interp (lookup x env) env)]
     [(add l r) (numV+ (interp l env) (interp r env))]
     [(mul l r) (numV* (interp l env) (interp r env))]
     [(if0 c t f) (if (is-zero-numV? (interp c env))
@@ -231,27 +255,50 @@ En caso afirmativo, ¿con quién?: _
 		   (interp f env))]
     [(with x v exp) #:when (symbol? x) (interp exp (extend x v env))]
     [(fun a exp) (closureV a exp env)]
-    [(app f a) (def (closureV params body fenv) (interp f env)
-	       (def values ((map (lambda (e) (interp e env)) a)))
-	       (app-clousure (clousureV params body fenv) values)]
-
+    [(app f a) (apply-closure (interp f env)
+			      (map (lambda (e) (interp e env)) a))]
+    [(curry* e) (currying (interp e env))]
+    [(uncurry* e) (uncurrying (interp e env))]
+    [(swap* e) (swapping (interp e env))]))
 
 #| Parte C |#
 
-;; curry* :: EValue -> EValue
-;; Individualiza los argumentos de una función
-(define (curry* val) '???)
+;; nest :: (listof Symbol) Expr -> Expr
+;; Envuelve un cuerpo en un fun por cada parámetro.
+(define (nest ps b)
+  (if (null? ps)
+      b
+      (fun (list (first ps)) (nest (rest ps) b))))
 
-;; uncurry* :: EValue -> EValue
-;; Toma una función que toma varios argumentos individuales 
-;; y retorna una función que recibe una única lista de varios argumentos
-(define (uncurry* val) '???)
+;; currying :: EValue -> EValue
+;; Individualiza los argumentos
+(define (currying val)
+  (match val
+    [(closureV (cons x xs) body env)
+     (if (null? xs)
+         val
+         (closureV (list x) (nest xs body) env))]))
+
+;; uncurrying :: EValue -> EValue
+;; Colapsa una cadena de funciones unarias en una multi-parámetro
+(define (uncurrying val)
+  (match val
+    [(closureV params body env)
+     (let loop ([ps params] [b body])
+       (match b
+         [(fun (list p) inner) (loop (append ps (list p)) inner)]
+         [_ (closureV ps b env)]))]))
 
 ;; swapping :: EValue -> EValue
-;; Invierte el orden de los argumentos de una función
-(define (swap* val) '???)
+;; Invierte el orden de los parámetros de la clausura.
+(define (swapping val)
+  (match val
+    [(closureV params body env)
+     (closureV (reverse params) body env)]))
 
 #| Parte D |#
 
 ;; run :: <s-expr> -> EValue
-(define (run expr) '???)
+;; Dado un programa bien escrito en sintaxis concreta, retorna su valor
+(define (run expr) 
+  (interp (parser expr) (mtEnv)))
