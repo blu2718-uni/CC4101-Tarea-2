@@ -59,14 +59,14 @@ Ejercicio 2
 
 ;; b)
 
-(test (interp (num10) (mtEnv)) (numV 10))
+(test (interp (numV 10) (mtEnv)) (numV 10))
 (test (interp (add (num 2) (num 3)) (mtEnv)) (numV 5))
 
-(test (interp (mult (num 2) (num 3)) (mtEnv)) (numV 6))
+(test (interp (mul (num 2) (num 3)) (mtEnv)) (numV 6))
 (test (interp (if0 (num 0) (num 1) (num 2)) (mtEnv)) (numV 1))
 (test (interp (if0 (num 1) (num 1) (num 2)) (mtEnv)) (numV 2))
 
-(test (interp (id 'x) (extend 'x (numV) (mtEnv))) (numV 3))
+(test (interp (id 'x) (extend 'x (numV 3) (mtEnv))) (numV 3))
 (test/exn (interp (id 'x) (mtEnv)) "lookup: Variable not found.")
 
 (test (interp (fun '(x) (id 'x)) (mtEnv))
@@ -78,7 +78,7 @@ Ejercicio 2
       (numV 4))
 
 (test (interp (app (fun '(x y) (add (id 'x) (id 'y)))
-		   (list (num 1) (num2))) (mtEnv))
+		   (list (num 1) (num 2))) (mtEnv))
       (numV 3))
 
 (test/exn (interp (app (fun '(x y) (add (id 'x) (id 'y)))
@@ -92,7 +92,7 @@ Ejercicio 2
       (closureV '(x) (fun '(y) (fun '(z) (add (id 'x) (id 'z)))) (mtEnv)))
 
 (test (interp (uncurry* 
-		(fun '(x) (fun '(y) (fun '(z) (add (id 'x) (add (id 'y) (id 'z)))))) (mtEnv)))
+		(fun '(x) (fun '(y) (fun '(z) (add (id 'x) (add (id 'y) (id 'z))))))) (mtEnv))
       (closureV '(x y z) (add (id 'x) (add (id 'y) (id 'z))) (mtEnv)))
 
 (test (interp (swap* (fun '(x y) (add (id 'x) (id 'y)))) (mtEnv))
@@ -100,7 +100,7 @@ Ejercicio 2
 
 ;; d)
 
-(test (run '((fun (x y) (+ x y))) (4 6)) (numV 10))
+(test (run '((fun (x y) (+ x y)) (4 6))) (numV 10))
 (test (run '((fun (x y) (* x y)) (2 3))) (numV 6)) 
 (test (run '(if0 ((fun (x y) (- x y)) (5 5)) (6) (1))) (numV 6))
 (test (run '(with x (+ 3 1) (- 4 x))) (numV 0))
