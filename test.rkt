@@ -31,6 +31,35 @@ Ejercicio 1
 (test (p-subst (p-with 'y (ff) (p-and (list (tt) (p-id 'x)))) 'x (tt)) 
       (p-with 'y (ff) (p-and (list (tt) (tt)))))
 
+(test (nest '() (num 3)) (num 3))
+(test (nest '(y z) (num 3)) (fun '(y) (fun '(z) (num 3))))
+
+(test (currying (closureV '(x) (num 5) (mtEnv)))
+      (closureV '(x) (num 5) (mtEnv)))
+(test (currying (closureV '(x y z) (add (id 'x) (add (id 'y) (id 'z))) (mtEnv)))
+      (closureV '(x)
+                (fun '(y) (fun '(z) (add (id 'x) (add (id 'y) (id 'z)))))
+                (mtEnv)))
+
+(test (uncurrying (closureV '(x y) (add (id 'x) (id 'y)) (mtEnv)))
+      (closureV '(x y) (add (id 'x) (id 'y)) (mtEnv)))
+(test (uncurrying
+       (closureV '(x) (fun '(y) (fun '(z) (add (id 'x) (add (id 'y) (id 'z)))))
+                 (mtEnv)))
+      (closureV '(x y z) (add (id 'x) (add (id 'y) (id 'z))) (mtEnv)))
+
+(test (swapping (closureV '(x) (num 1) (mtEnv)))
+      (closureV '(x) (num 1) (mtEnv)))   ; un parámetro: igual
+(test (swapping (closureV '(x y) (add (id 'x) (id 'y)) (mtEnv)))
+      (closureV '(y x) (add (id 'x) (id 'y)) (mtEnv)))
+
+(test (uncurrying
+       (currying (closureV '(x y z) (add (id 'x) (add (id 'y) (id 'z))) (mtEnv))))
+      (closureV '(x y z) (add (id 'x) (add (id 'y) (id 'z))) (mtEnv)))
+(test (swapping (swapping (closureV '(x y z) (num 0) (mtEnv))))
+      (closureV '(x y z) (num 0) (mtEnv)))
+
+
 ;; d)
 
 (test (p-eval (tt)) #t)
@@ -73,7 +102,7 @@ Ejercicio 2
       (closureV '(x) (id 'x) (mtEnv)))
 
 (test (interp (with 'x (num 3) (fun '(y) (id 'y))) (mtEnv)) 
-      (closureV '(y) (id 'y) (xtEnv 'x (numV 3) (mtEnv))))
+      (closureV '(y) (id 'y) (xtEnv 'x (num 3) (mtEnv))))
 (test (interp (with 'x (num 3) (add (id 'x) (num 1))) (mtEnv)) 
       (numV 4))
 
@@ -84,6 +113,25 @@ Ejercicio 2
 (test/exn (interp (app (fun '(x y) (add (id 'x) (id 'y)))
 		   (list (num 1))) (mtEnv))
       "interp: Arity mismatch")
+
+(test (bind-args '(x) (list (numV 1)) (mtEnv))
+      (cons '() (xtEnv 'x (numV 1) (mtEnv))))
+(test (bind-args '(x y z) (list (numV 1) (numV 2)) (mtEnv))
+      (cons '(z) (xtEnv 'y (numV 2) (xtEnv 'x (numV 1) (mtEnv)))))
+(test (bind-args '(x y) (list) (mtEnv))
+      (cons '(x y) (mtEnv)))
+
+(define id2 (fun '(x y) (add (id 'x) (id 'y))))
+(test (apply-closure (closureV '(x y) (add (id 'x) (id 'y)) (mtEnv))
+                     (list (numV 1) (numV 2)))
+      (numV 3))
+(test (apply-closure (closureV '(x y) (add (id 'x) (id 'y)) (mtEnv))
+                     (list (numV 1)))
+      (closureV '(y) (add (id 'x) (id 'y))
+                (xtEnv 'x (numV 1) (mtEnv))))
+(test/exn (apply-closure (closureV '(x y) (add (id 'x) (id 'y)) (mtEnv))
+                         (list (numV 1) (numV 2) (numV 3)))
+          "interp: Arity mismatch")
 
 ;; c)
 
